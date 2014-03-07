@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * Log a user in with remote_api using an e-mail address and password.
+ */
+
+/**
+ * Implements hook_init().
+ */
+function custom_thing_login_init() {
+  global $user;
+  // Only proceed if we have a user who is not anonymous or the admin.
+  if ($user->uid > 0) {
+    // Load the full user object.
+    $account = user_load($user->uid);
+    // If our user has a remote account then attempt to login so we can have a token.
+    if (custom_thing_login_user_has_remote_account($account)) {
+      custom_thing_login_remote_api_authenticate($account);
+    }
+    // If the logged in user goes to user/login, redirect to home page.
+    if (current_path() === 'user/login' || current_path() === 'user') {
+      drupal_goto('<front>');
+    }
+  }
+  else {
+    if (current_path() === 'user/logout' || current_path() === 'user') {
+      drupal_goto();
+    }
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function custom_thing_login_permission() {
+  $permissions = array();
+
+  $permissions['login without remote_api'] = array(
+    'title' => t('login without remote_api'),
+    'description' => t('Login to the site without remote_api authentication.'),
+  );
+
+  return $permissions;
+}
